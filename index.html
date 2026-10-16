@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#7c5cfc" />
+  <meta name="description" content="职场图鉴 - 帮你识别职场中的人格类型，告诉你该怎么应对" />
+
+  <!-- canonical：正式域名唯一入口 -->
+  <link rel="canonical" href="https://workplace.misi-changeye.com.cn/" />
+
+  <!-- 社交分享卡片（OG） -->
+  <meta property="og:title" content="职场图鉴 · 职场人格识别与应对" />
+  <meta property="og:description" content="了解职场文化，从当下做起。测一次，看清你的真实自我和职场面具。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="职场图鉴" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:url" content="https://workplace.misi-changeye.com.cn/" />
+  <meta property="og:image" content="https://workplace.misi-changeye.com.cn/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="职场图鉴 · 了解职场文化，从当下做起" />
+
+  <!-- 社交分享卡片（Twitter/X） -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="职场图鉴 · 职场人格识别与应对" />
+  <meta name="twitter:description" content="了解职场文化，从当下做起。测一次，看清你的真实自我和职场面具。" />
+  <meta name="twitter:image" content="https://workplace.misi-changeye.com.cn/og-image.png" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="职场图鉴" />
+  <meta name="app-version" content="20261016-1501" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <title>职场图鉴 · 职场人格识别与应对</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <noscript>
+    <div class="noscript-notice">
+      本应用需要开启 JavaScript 才能使用，请在浏览器设置中开启后刷新页面。
+    </div>
+  </noscript>
+
+  <!-- 顶部导航（非嵌入模式显示） -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">职场图鉴</span>
+      </div>
+      <button class="ghost-btn" id="restartBtn" aria-label="重新测评">重新测评</button>
+    </div>
+  </header>
+
+  <!-- 主应用容器（按 URL 参数切换显示） -->
+  <main id="app">
+    <!-- 首页 -->
+    <section class="page page-home" data-page="home">
+      <div class="hero">
+        <h1 class="hero-title">职场图鉴</h1>
+        <p class="hero-subtitle">了解职场文化，从当下做起</p>
+      </div>
+      <div class="home-actions">
+        <button class="primary-btn" data-route="quiz">测试我的职场人格</button>
+        <!-- 续答入口：只在有未完成答卷时出现，且必须弱化——它不该抢主行动的位置 -->
+        <button class="resume-btn" id="resumeBtn" hidden>你上次答到第 <span id="resumeIndex"></span> 题，继续 →</button>
+        <button class="secondary-btn" data-route="query">我想了解一个同事</button>
+        <button class="tertiary-btn" data-route="leave">什么时候该走</button>
+      </div>
+      <div class="privacy">
+        本测评所有数据仅保存在你的浏览器本地，不上传任何服务器。清除浏览器数据会同步清除所有记录。
+      </div>
+    </section>
+
+    <!-- 测评页 -->
+    <section class="page page-quiz" data-page="quiz" hidden>
+      <div class="quiz-shell">
+        <div class="progress-wrap" aria-label="答题进度">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">第 1/40 题</div>
+        </div>
+
+        <div class="quiz-card">
+          <div class="quiz-group-tag" id="quizGroupTag">真实自我</div>
+          <div class="quiz-question" id="quizQuestion">题目加载中…</div>
+          <div class="quiz-options" id="quizOptions" role="radiogroup" aria-label="选项"></div>
+        </div>
+
+        <div class="quiz-nav">
+          <button class="nav-btn nav-prev" id="prevBtn">上一题</button>
+          <button class="nav-btn nav-next primary-btn" id="nextBtn">下一题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结果页 -->
+    <section class="page page-result" data-page="result" hidden>
+      <div class="result-hero">
+        <div class="result-type" id="resultType">你是【类型占位】</div>
+        <div class="result-gap-sentence" id="resultGapSentence">你以为你在 <span class="gap-a">____</span>，同事读到的是<span class="gap-b">____</span>。</div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-title">双轨对比</div>
+        <div class="radar-wrap">
+          <canvas id="radarCanvas" aria-label="六维人格雷达图"></canvas>
+        </div>
+        <div class="radar-legend">
+          <span class="legend-item"><span class="legend-line legend-solid"></span>真实自我</span>
+          <span class="legend-item"><span class="legend-line legend-dashed"></span>职场面具</span>
+        </div>
+      </div>
+
+      <div class="result-card" id="cardNaturalTrait">
+        <div class="card-title">你的天然特质解读</div>
+        <div class="card-body" id="naturalTraitBody">第 2 阶段填充完整解读文案。</div>
+      </div>
+
+      <div class="result-card" id="cardMaskTrait">
+        <div class="card-title">你的职场面具解读</div>
+        <div class="card-body" id="maskTraitBody">第 2 阶段填充完整解读文案。</div>
+      </div>
+
+      <div class="result-card" id="cardGapAnalysis">
+        <div class="card-title">天然 vs 面具的差距分析</div>
+        <div class="card-body" id="gapAnalysisBody">差距分析将在第 2 阶段生成。</div>
+      </div>
+
+      <div class="result-card" id="cardVulnerability">
+        <div class="card-title">你在职场中最容易受的伤</div>
+        <div class="card-body" id="vulnerabilityBody">第 2 阶段填充。</div>
+      </div>
+
+      <div class="result-card" id="cardPractice">
+        <div class="card-title">你该练的三件事</div>
+        <div class="card-body" id="practiceBody">第 2 阶段填充。</div>
+      </div>
+
+      <div class="result-card" id="cardShare">
+        <div class="card-title">分享你的发现</div>
+        <div class="card-body">
+          <button class="primary-btn share-btn" id="shareLinkBtn">复制分享链接</button>
+          <button class="secondary-btn share-btn" id="shareBtn" style="margin-top: 10px;">生成分享图</button>
+          <p class="share-link-preview" id="shareLinkPreview"></p>
+          <p class="placeholder-line" style="margin-top: 10px;">分享出去的是你那句落差句，不是类型介绍——别人点开看到的是你的结果。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分享只读结果页（?r=xxx） -->
+    <section class="page page-shared" data-page="shared" hidden>
+      <div class="result-card shared-card">
+        <div class="shared-label">TA 测出来的结果</div>
+        <div class="result-type" id="sharedType"></div>
+        <div class="result-gap-sentence" id="sharedGapSentence"></div>
+        <button class="primary-btn" id="sharedCtaBtn" style="margin-top: 24px;">我也要测</button>
+        <button class="secondary-btn" id="sharedCloseBtn" style="margin-top: 10px;">我先看看别的</button>
+        <p class="placeholder-line" style="margin-top: 14px; text-align: center;">雷达图和详细解读只有做完测试的人才能看到。</p>
+      </div>
+    </section>
+
+    <!-- 分享图渲染区（隐藏，仅用于 canvas 截图） -->
+    <div id="shareCardRoot" aria-hidden="true"></div>
+
+    <!-- 查询页（三种方式） -->
+    <section class="page page-query" data-page="query" hidden>
+      <div class="query-tabs">
+        <button class="query-tab active" data-qtab="type">按类型查</button>
+        <button class="query-tab" data-qtab="phenomenon">按现象查</button>
+        <button class="query-tab" data-qtab="scene">按场景查</button>
+      </div>
+
+      <!-- 按类型查 -->
+      <div class="query-panel" data-qpanel="type">
+        <p class="query-hint">选一个最接近他的类型，看完整解读和应对方式。</p>
+        <div class="type-grid" id="typeGrid"></div>
+      </div>
+
+      <!-- 按现象查 -->
+      <div class="query-panel" data-qpanel="phenomenon" hidden>
+        <p class="query-hint">描述你观察到的现象，比如"抢功""甩锅""拍马屁"。</p>
+        <input class="query-input" id="phenomenonInput" type="search" placeholder="输入关键词，如：抢功、甩锅、躺平" />
+        <button class="primary-btn" id="phenomenonSearchBtn" style="margin-top: 12px;">查询</button>
+        <div class="phenomenon-results" id="phenomenonResults"></div>
+      </div>
+
+      <!-- 按场景查 -->
+      <div class="query-panel" data-qpanel="scene" hidden>
+        <p class="query-hint">选一个你正在经历的场景，直接给应对策略。</p>
+        <div id="sceneCategoryList"></div>
+      </div>
+    </section>
+
+    <!-- 查询结果页（6 个板块） -->
+    <section class="page page-query-result" data-page="queryResult" hidden>
+      <div class="result-card">
+        <div class="card-title">对方可能的类型</div>
+        <div class="card-body" id="qrType"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">当前场景</div>
+        <div class="card-body" id="qrScene"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">应对策略</div>
+        <div class="card-body" id="qrStrategy"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">该说什么 / 不该说什么</div>
+        <div class="card-body" id="qrSpeech"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">避坑清单</div>
+        <div class="card-body" id="qrPitfalls"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">什么时候该升级处理</div>
+        <div class="card-body" id="qrEscalate"></div>
+      </div>
+      <button class="secondary-btn" id="qrBackBtn" style="margin-top: 8px;">返回查询</button>
+    </section>
+
+    <!-- 退出判断页 -->
+    <section class="page page-leave" data-page="leave" hidden>
+      <div class="result-card" id="leaveIntro">
+        <div class="card-title">什么时候该走</div>
+        <div class="card-body">
+          <p style="margin: 0 0 10px;">6 个问题，帮你判断"该忍还是该走"。如实回答，别替自己找理由。</p>
+          <p style="margin: 0; color: var(--text-secondary); font-size: 13px;">全部回答后给出建议。数据只存在你本地。</p>
+        </div>
+      </div>
+      <div id="leaveQuestions"></div>
+      <button class="primary-btn" id="leaveSubmitBtn" style="margin-top: 16px;">看结果</button>
+      <div class="leave-result" id="leaveResult" hidden></div>
+      <button class="secondary-btn" id="leaveResetBtn" style="margin-top: 12px;" hidden>重新回答</button>
+    </section>
+
+    <!-- 场景应对页（?scene=xxx）—— 独立板块，不与查询结果页共用 DOM -->
+    <section class="page page-scene" data-page="scene" hidden>
+      <div class="result-card scene-hero-card">
+        <div class="scene-hero" id="sceneHero">场景</div>
+        <div class="scene-hero-cat" id="sceneHeroCat"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">这个场景里，你面对的可能是</div>
+        <div class="card-body" id="sceneType"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">应对策略</div>
+        <div class="card-body" id="sceneStrategy"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">该说什么 / 不该说什么</div>
+        <div class="card-body" id="sceneSpeech"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">避坑清单</div>
+        <div class="card-body" id="scenePitfalls"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">什么时候该升级处理</div>
+        <div class="card-body" id="sceneEscalate"></div>
+      </div>
+      <div class="scene-actions">
+        <button class="primary-btn" id="sceneTypeBtn">按类型看更针对性解读</button>
+        <button class="secondary-btn" id="sceneBackBtn" style="margin-top: 10px;">换个场景</button>
+      </div>
+    </section>
+
+    <!-- 类型解读页（?type=xxx） -->
+    <section class="page page-type" data-page="type" hidden>
+      <div class="result-card" id="typePageHero">
+        <div class="result-type" id="typePageName">类型名</div>
+        <div class="type-one-liner" id="typePageOneLine">一句话画像</div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">他的典型表现</div>
+        <div class="card-body" id="typePageBehavior"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">他的核心弱点</div>
+        <div class="card-body" id="typePageWeakness"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">和他共事，你要注意的 5 件事</div>
+        <div class="card-body" id="typePageCoop"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">面具解读</div>
+        <div class="card-body" id="typePageMask"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">在职场中最容易受的伤</div>
+        <div class="card-body" id="typePageHurt"></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">该练的三件事</div>
+        <div class="card-body" id="typePagePractice"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 底部免责（嵌入模式隐藏） -->
+  <footer class="footer" id="footer">
+    <div>本应用不收集任何数据 · 全部数据保存在你的浏览器本地</div>
+  </footer>
+
+  <!-- 第三方库（本地，PWA 离线可用） -->
+<script src="./chart.umd.min.js"></script>
+<script src="./html2canvas.min.js"></script>
+
+<!-- 全局错误捕获：必须早于 app.js，防止初始化失败导致白屏 -->
+<script>
+  ...
+</script>
+
+<script src="./app.js" type="module"></script>
+</body>
+</html>
