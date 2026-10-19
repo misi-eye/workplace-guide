@@ -31,7 +31,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="职场图鉴" />
-  <meta name="app-version" content="20261016-1501" />
+  <meta name="app-version" content="20261019-1141" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
@@ -312,15 +312,40 @@
     <div>本应用不收集任何数据 · 全部数据保存在你的浏览器本地</div>
   </footer>
 
-  <!-- 第三方库（本地，PWA 离线可用） -->
-<script src="./chart.umd.min.js"></script>
-<script src="./html2canvas.min.js"></script>
+  <!-- 第三方库不再在首屏加载：Chart.js / html2canvas 由 loader.js 按需拉取 -->
 
-<!-- 全局错误捕获：必须早于 app.js，防止初始化失败导致白屏 -->
-<script>
-  ...
-</script>
+  <!-- 全局错误捕获：必须早于 app.js，防止初始化失败导致白屏 -->
+  <script>
+    (function () {
+      var shown = false;
+      function onAppError(e) {
+        console.error('App error:', e);
+        if (shown) return;
+        var app = document.getElementById('app');
+        if (!app) return;
 
-<script src="./app.js" type="module"></script>
+        // 判断"是否有任一页面处于可见状态"：
+        // HTML 里静态写了 9 个 <section>，app.children.length 永远 > 0，
+        // 所以必须检查 hidden 属性，而不是子元素数量。
+        var pages = app.querySelectorAll('.page');
+        var hasVisiblePage = Array.prototype.some.call(pages, function (p) {
+          return !p.hasAttribute('hidden');
+        });
+
+        if (!hasVisiblePage) {
+          shown = true;
+          app.innerHTML =
+            '<div class="noscript-notice" style="margin-top:24px;">' +
+            '<div style="font-size:17px;font-weight:600;margin-bottom:8px;">应用加载失败</div>' +
+            '<div>请刷新页面重试。如果反复失败，试试清除浏览器缓存后再打开。</div>' +
+            '</div>';
+        }
+      }
+      // 第三个参数 true：资源加载失败（如 js/css 404）不冒泡，必须用捕获阶段
+      window.addEventListener('error', onAppError, true);
+    })();
+  </script>
+
+  <script src="./app.js" type="module"></script>
 </body>
 </html>
