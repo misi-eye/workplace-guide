@@ -312,9 +312,11 @@
     <div>本应用不收集任何数据 · 全部数据保存在你的浏览器本地</div>
   </footer>
 
-  <!-- 第三方库不再在首屏加载：Chart.js / html2canvas 由 loader.js 按需拉取 -->
+<!-- 第三方库（本地，PWA 离线可用） -->
+<script src="./chart.umd.min.js"></script>
+<script src="./html2canvas.min.js"></script>
 
-  <!-- 全局错误捕获：必须早于 app.js，防止初始化失败导致白屏 -->
+<!-- 全局错误捕获：必须早于 app.js，防止初始化失败导致白屏 -->
   <script>
     (function () {
       var shown = false;
